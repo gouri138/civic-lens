@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Department Dashboard - Civic Lens</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <header>
+        <h1 id="departmentTitle">Department Dashboard - Civic Lens</h1>
+        <nav>
+            <a href="admin-dashboard.html">Back to Admin</a>
+        </nav>
+    </header>
+
+    <section>
+        <h2>Assigned Complaints</h2>
+        <table id="departmentComplaintsTable" border="1">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Complaints will be populated here -->
+            </tbody>
+        </table>
+    </section>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const departmentId = urlParams.get('id');
+
+        if (!departmentId || departmentId === 'null') {
+            // Show department selection instead of redirecting
+            showDepartmentSelection();
+        } else {
+            loadDepartmentDashboard(departmentId);
+        }
+
+        function showDepartmentSelection() {
+            document.getElementById('departmentTitle').textContent = 'Select Department - Civic Lens';
+            document.querySelector('section').innerHTML = `
+                <h2>Select a Department</h2>
+                <div id="departmentSelection">
+                    <p>Loading departments...</p>
+                </div>
+            `;
+
+            fetch('http://localhost:8080/api/departments')
+                .then(response => response.json())
+                .then(data => {
+                    const selectionDiv = document.getElementById('departmentSelection');
+                    if (data.length === 0) {
+                        selectionDiv.innerHTML = '<p>No departments found. Please create departments first.</p>';
+                        return;
+                    }
+                    selectionDiv.innerHTML = '<p>Select a department to view its dashboard:</p>';
+                    data.forEach(department => {
+                        const btn = document.createElement('button');
+                        btn.textContent = department.name;
+                        btn.onclick = () => {
+                            window.location.href = `department-dashboard.html?id=${department.id}`;
+                        };
+                        selectionDiv.appendChild(btn);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading departments:', error);
+                    document.getElementById('departmentSelection').innerHTML = '<p>Error loading departments. Please check if the backend is running.</p>';
+                });
+        }
+
+        function loadDepartmentDashboard(deptId) {
+            function loadDepartmentComplaints() {
+                fetch(`http://localhost:8080/api/complaints/department/${deptId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const tbody = document.getElementById('departmentComplaintsTable').querySelector('tbody');
+                        tbody.innerHTML = '';
+                        data.forEach(complaint => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td>${complaint.id}</td>
+                                <td>${complaint.user ? complaint.user.name : 'N/A'}</td>
+                                <td>${complaint.category}</td>
+                                <td>${complaint.location}</td>
+                                <td>${complaint.description}</td>
+                                <td><span class="status-${complaint.status.toLowerCase().replace(' ', '-')}">${complaint.status}</span></td>
+                                <td>
+                                    <button onclick="resolveComplaint(${complaint.id})">Resolve</button>
+                                    <button onclick="unresolveComplaint(${complaint.id})">Not Resolved</button>
+                                </td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error loading department complaints:', error);
+                    });
+            }
+
+            // Load department name
+            fetch(`http://localhost:8080/api/departments/${deptId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('departmentTitle').textContent = `${data.name} Department Dashboard - Civic Lens`;
+                })
+                .catch(error => {
+                    console.error('Error loading department:', error);
+                });
+
+            loadDepartmentComplaints();
+        }
+
+        // Global functions for button onclick handlers
+        function resolveComplaint(id) {
+            updateComplaintStatus(id, 'Resolved');
+        }
+
+        function unresolveComplaint(id) {
+            updateComplaintStatus(id, 'Not Resolved');
+        }
+
+        function updateComplaintStatus(id, status) {
+            fetch(`http://localhost:8080/api/complaints/${id}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: status })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert(`Complaint ${status.toLowerCase()}`);
+                    // Reload the current department's complaints
+                    const currentDeptId = urlParams.get('id');
+                    if (currentDeptId) {
+                        loadDepartmentDashboard(currentDeptId);
+                    }
+                } else {
+                    alert(`Failed to update complaint status`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to update complaint status');
+            });
+        }
+    </script>
+</body>
+</html>

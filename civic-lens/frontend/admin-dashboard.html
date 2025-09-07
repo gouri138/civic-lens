@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Dashboard - Civic Lens</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <header>
+        <h1>Civic Lens - Admin Dashboard</h1>
+        <nav>
+            <a href="index.html">Logout</a>
+        </nav>
+    </header>
+
+    <section>
+        <h2>All Complaints</h2>
+        <div id="departmentsList">
+            <h3>Department Dashboards</h3>
+            <div id="createDepartmentForm">
+                <input type="text" id="departmentName" placeholder="Department Name" />
+                <button onclick="createDepartment()">Create Department</button>
+            </div>
+            <!-- Departments will be loaded here -->
+        </div>
+        <table id="allComplaintsTable" border="1">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Department</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Complaints will be populated here -->
+            </tbody>
+        </table>
+    </section>
+
+    <script>
+        function loadDepartments() {
+            fetch('http://localhost:8080/api/departments')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Departments loaded:', data);
+                    const departmentsList = document.getElementById('departmentsList');
+                    // Clear existing department buttons (keep the form and title)
+                    const existingButtons = departmentsList.querySelectorAll('button:not(#createDepartmentForm button)');
+                    existingButtons.forEach(btn => btn.remove());
+                    const existingMessages = departmentsList.querySelectorAll('p');
+                    existingMessages.forEach(p => p.remove());
+
+                    if (data.length === 0) {
+                        departmentsList.innerHTML += '<p>No departments found. Please create departments first.</p>';
+                        return;
+                    }
+                    data.forEach(department => {
+                        const btn = document.createElement('button');
+                        btn.textContent = department.name;
+                        btn.onclick = () => {
+                            console.log('Navigating to department:', department.id);
+                            window.location.href = `department-dashboard.html?id=${department.id}`;
+                        };
+                        departmentsList.appendChild(btn);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading departments:', error);
+                    const departmentsList = document.getElementById('departmentsList');
+                    const existingMessages = departmentsList.querySelectorAll('p');
+                    existingMessages.forEach(p => p.remove());
+                    departmentsList.innerHTML += '<p>Error loading departments. Please check if the backend is running.</p>';
+                });
+        }
+
+        function loadAllComplaints() {
+            fetch('http://localhost:8080/api/complaints')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('allComplaintsTable').querySelector('tbody');
+                    tbody.innerHTML = '';
+                    data.forEach(complaint => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${complaint.id}</td>
+                            <td>${complaint.user ? complaint.user.name : 'N/A'}</td>
+                            <td>${complaint.category}</td>
+                            <td>${complaint.location}</td>
+                            <td>${complaint.description}</td>
+                            <td><span class="status-${complaint.status.toLowerCase().replace(' ', '-')}">${complaint.status}</span></td>
+                            <td>${complaint.department ? complaint.department.name : 'N/A'}</td>
+                            <td>
+                                <button onclick="acceptComplaint(${complaint.id})">Accept</button>
+                                <button onclick="rejectComplaint(${complaint.id})">Reject</button>
+                                <button onclick="assignDepartment(${complaint.id})">Assign Department</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading complaints:', error);
+                });
+        }
+
+        function acceptComplaint(id) {
+            updateComplaintStatus(id, 'Accepted');
+        }
+
+        function rejectComplaint(id) {
+            updateComplaintStatus(id, 'Rejected');
+        }
+
+        function assignDepartment(id) {
+            const departmentId = prompt('Enter Department ID to assign:');
+            if (departmentId) {
+                fetch(`http://localhost:8080/api/complaints/${id}/assign/${departmentId}`, {
+                    method: 'PUT'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Department assigned successfully');
+                        loadAllComplaints();
+                    } else {
+                        alert('Failed to assign department');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to assign department');
+                });
+            }
+        }
+
+        function updateComplaintStatus(id, status) {
+            fetch(`http://localhost:8080/api/complaints/${id}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: status })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert(`Complaint ${status.toLowerCase()} successfully`);
+                    loadAllComplaints();
+                } else {
+                    alert(`Failed to update complaint status to ${status}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to update complaint status');
+            });
+        }
+
+        function createDepartment() {
+            const departmentName = document.getElementById('departmentName').value.trim();
+            if (!departmentName) {
+                alert('Please enter a department name');
+                return;
+            }
+
+            fetch('http://localhost:8080/api/departments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name: departmentName })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Department created successfully');
+                    document.getElementById('departmentName').value = '';
+                    loadDepartments();
+                } else {
+                    alert('Failed to create department');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to create department');
+            });
+        }
+
+        loadDepartments();
+        loadAllComplaints();
+    </script>
+</body>
+</html>
