@@ -4,109 +4,323 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Admin Dashboard - Civic Lens</title>
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Dashboard - Civic Lens</title>
     <link rel="stylesheet" href="styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <header>
-        <h1>Civic Lens - Admin Dashboard</h1>
-        <nav>
-            <a href="index.html">Logout</a>
-        </nav>
-    </header>
-
-    <section>
-        <h2>All Complaints</h2>
-        <div id="departmentsList">
-            <h3>Department Dashboards</h3>
-            <div id="createDepartmentForm">
-                <input type="text" id="departmentName" placeholder="Department Name" />
-                <button onclick="createDepartment()">Create Department</button>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-eye"></i>
+                    <h1>Civic Lens</h1>
+                    <span class="admin-badge">Admin</span>
+                </div>
+                <nav class="nav">
+                    <button class="nav-btn" onclick="window.location.href='index.html'">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
+                </nav>
             </div>
-            <!-- Departments will be loaded here -->
+        </header>
+
+        <main class="main">
+            <div class="admin-dashboard">
+                <div class="dashboard-header">
+                    <h2><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h2>
+                    <div class="dashboard-stats">
+                        <div class="stat-card">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <div class="stat-info">
+                                <span class="stat-number" id="totalComplaintsCount">0</span>
+                                <span class="stat-label">Total Complaints</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-clock"></i>
+                            <div class="stat-info">
+                                <span class="stat-number" id="pendingComplaintsCount">0</span>
+                                <span class="stat-label">Pending</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-building"></i>
+                            <div class="stat-info">
+                                <span class="stat-number" id="departmentCount">0</span>
+                                <span class="stat-label">Departments</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">
+                        <h3><i class="fas fa-chart-bar"></i> Top Complaint Locations</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="locationChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="admin-sections">
+                    <div class="section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-building"></i> Department Management</h3>
+                        </div>
+                        <div class="department-management">
+                            <div class="create-department">
+                                <div class="input-group">
+                                    <input type="text" id="departmentName" placeholder="Department Name" />
+                                    <button onclick="createDepartment()" class="create-btn">
+                                        <i class="fas fa-plus"></i>
+                                        Create Department
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="departmentsList" class="departments-grid">
+                                <!-- Departments will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-list"></i> All Complaints</h3>
+                            <div class="filter-controls">
+                                <select id="statusFilter" onchange="filterComplaints()">
+                                    <option value="">All Status</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Accepted">Accepted</option>
+                                    <option value="Resolved">Resolved</option>
+                                    <option value="Rejected">Rejected</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table id="allComplaintsTable" class="modern-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>User</th>
+                                        <th>Category</th>
+                                        <th>Location</th>
+                                        <th>Description</th>
+                                        <th>Status</th>
+                                        <th>Department</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Complaints will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Department Assignment Modal -->
+    <div id="assignModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Assign Department</h3>
+                <button class="close-btn" onclick="closeAssignModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Select a department for complaint #<span id="assignComplaintId"></span></p>
+                <select id="departmentSelect" class="modal-select">
+                    <option value="">Select Department</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeAssignModal()" class="cancel-btn">Cancel</button>
+                <button onclick="confirmAssignment()" class="confirm-btn">Assign</button>
+            </div>
         </div>
-        <table id="allComplaintsTable" border="1">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>User</th>
-                    <th>Category</th>
-                    <th>Location</th>
-                    <th>Description</th>
-                    <th>Status</th>
-                    <th>Department</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Complaints will be populated here -->
-            </tbody>
-        </table>
-    </section>
+    </div>
 
     <script>
+        let allComplaints = [];
+        let allDepartments = [];
+
         function loadDepartments() {
             fetch('http://localhost:8080/api/departments')
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Departments loaded:', data);
+                    allDepartments = data;
                     const departmentsList = document.getElementById('departmentsList');
-                    // Clear existing department buttons (keep the form and title)
-                    const existingButtons = departmentsList.querySelectorAll('button:not(#createDepartmentForm button)');
-                    existingButtons.forEach(btn => btn.remove());
-                    const existingMessages = departmentsList.querySelectorAll('p');
-                    existingMessages.forEach(p => p.remove());
+                    departmentsList.innerHTML = '';
 
                     if (data.length === 0) {
-                        departmentsList.innerHTML += '<p>No departments found. Please create departments first.</p>';
+                        departmentsList.innerHTML = '<div class="no-data">No departments found. Create your first department above.</div>';
+                        document.getElementById('departmentCount').textContent = '0';
                         return;
                     }
+
                     data.forEach(department => {
-                        const btn = document.createElement('button');
-                        btn.textContent = department.name;
-                        btn.onclick = () => {
-                            console.log('Navigating to department:', department.id);
-                            window.location.href = `department-dashboard.html?id=${department.id}`;
-                        };
-                        departmentsList.appendChild(btn);
+                        const card = document.createElement('div');
+                        card.className = 'department-card';
+                        card.innerHTML = `
+                            <div class="department-info">
+                                <i class="fas fa-building"></i>
+                                <h4>${department.name}</h4>
+                            </div>
+                            <button onclick="window.location.href='department-dashboard.html?id=${department.id}'" class="view-btn">
+                                <i class="fas fa-eye"></i>
+                                View Dashboard
+                            </button>
+                        `;
+                        departmentsList.appendChild(card);
                     });
+
+                    document.getElementById('departmentCount').textContent = data.length;
+                    populateDepartmentSelect();
                 })
                 .catch(error => {
                     console.error('Error loading departments:', error);
-                    const departmentsList = document.getElementById('departmentsList');
-                    const existingMessages = departmentsList.querySelectorAll('p');
-                    existingMessages.forEach(p => p.remove());
-                    departmentsList.innerHTML += '<p>Error loading departments. Please check if the backend is running.</p>';
+                    showNotification('Error loading departments', 'error');
                 });
+        }
+
+        function loadTopLocations() {
+            fetch('http://localhost:8080/api/complaints/top-locations')
+                .then(response => response.json())
+                .then(data => {
+                    const ctx = document.getElementById('locationChart').getContext('2d');
+                    const locations = data.map(item => item[0]);
+                    const counts = data.map(item => item[1]);
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: locations,
+                            datasets: [{
+                                label: 'Number of Complaints',
+                                data: counts,
+                                backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                                borderColor: 'rgba(59, 130, 246, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        stepSize: 1
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading top locations:', error);
+                    const chartContainer = document.querySelector('.chart-container');
+                    chartContainer.innerHTML = '<div class="no-data">Unable to load chart data</div>';
+                });
+        }
+
+        function populateDepartmentSelect() {
+            const select = document.getElementById('departmentSelect');
+            select.innerHTML = '<option value="">Select Department</option>';
+            allDepartments.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept.id;
+                option.textContent = dept.name;
+                select.appendChild(option);
+            });
         }
 
         function loadAllComplaints() {
             fetch('http://localhost:8080/api/complaints')
                 .then(response => response.json())
                 .then(data => {
-                    const tbody = document.getElementById('allComplaintsTable').querySelector('tbody');
-                    tbody.innerHTML = '';
-                    data.forEach(complaint => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${complaint.id}</td>
-                            <td>${complaint.user ? complaint.user.name : 'N/A'}</td>
-                            <td>${complaint.category}</td>
-                            <td>${complaint.location}</td>
-                            <td>${complaint.description}</td>
-                            <td><span class="status-${complaint.status.toLowerCase().replace(' ', '-')}">${complaint.status}</span></td>
-                            <td>${complaint.department ? complaint.department.name : 'N/A'}</td>
-                            <td>
-                                <button onclick="acceptComplaint(${complaint.id})">Accept</button>
-                                <button onclick="rejectComplaint(${complaint.id})">Reject</button>
-                                <button onclick="assignDepartment(${complaint.id})">Assign Department</button>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
+                    allComplaints = data;
+                    updateComplaintStats(data);
+                    displayComplaints(data);
                 })
                 .catch(error => {
                     console.error('Error loading complaints:', error);
+                    showNotification('Error loading complaints', 'error');
                 });
+        }
+
+        function displayComplaints(complaints) {
+            const tbody = document.getElementById('allComplaintsTable').querySelector('tbody');
+            tbody.innerHTML = '';
+
+            if (complaints.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="no-data">No complaints found</td></tr>';
+                return;
+            }
+
+            complaints.forEach(complaint => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span class="complaint-id">#${complaint.id}</span></td>
+                    <td>${complaint.user ? complaint.user.name : 'N/A'}</td>
+                    <td><span class="category">${complaint.category}</span></td>
+                    <td><span class="location">${complaint.location}</span></td>
+                    <td><span class="description">${complaint.description}</span></td>
+                    <td><span class="status status-${complaint.status.toLowerCase().replace(' ', '-')}">${complaint.status}</span></td>
+                    <td><span class="department">${complaint.department ? complaint.department.name : 'Unassigned'}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button onclick="acceptComplaint(${complaint.id})" class="action-btn accept" title="Accept">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button onclick="rejectComplaint(${complaint.id})" class="action-btn reject" title="Reject">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <button onclick="openAssignModal(${complaint.id})" class="action-btn assign" title="Assign Department">
+                                <i class="fas fa-building"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateComplaintStats(complaints) {
+            const total = complaints.length;
+            const pending = complaints.filter(c => c.status === 'Pending').length;
+            
+            document.getElementById('totalComplaintsCount').textContent = total;
+            document.getElementById('pendingComplaintsCount').textContent = pending;
+        }
+
+        function filterComplaints() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            let filtered = allComplaints;
+
+            if (statusFilter) {
+                filtered = allComplaints.filter(c => c.status === statusFilter);
+            }
+
+            displayComplaints(filtered);
         }
 
         function acceptComplaint(id) {
@@ -117,25 +331,41 @@
             updateComplaintStatus(id, 'Rejected');
         }
 
-        function assignDepartment(id) {
-            const departmentId = prompt('Enter Department ID to assign:');
-            if (departmentId) {
-                fetch(`http://localhost:8080/api/complaints/${id}/assign/${departmentId}`, {
-                    method: 'PUT'
-                })
-                .then(response => {
-                    if (response.ok) {
-                        alert('Department assigned successfully');
-                        loadAllComplaints();
-                    } else {
-                        alert('Failed to assign department');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to assign department');
-                });
+        function openAssignModal(complaintId) {
+            document.getElementById('assignComplaintId').textContent = complaintId;
+            document.getElementById('assignModal').style.display = 'flex';
+            document.getElementById('assignModal').dataset.complaintId = complaintId;
+        }
+
+        function closeAssignModal() {
+            document.getElementById('assignModal').style.display = 'none';
+        }
+
+        function confirmAssignment() {
+            const complaintId = document.getElementById('assignModal').dataset.complaintId;
+            const departmentId = document.getElementById('departmentSelect').value;
+            
+            if (!departmentId) {
+                showNotification('Please select a department', 'error');
+                return;
             }
+
+            fetch(`http://localhost:8080/api/complaints/${complaintId}/assign/${departmentId}`, {
+                method: 'PUT'
+            })
+            .then(response => {
+                if (response.ok) {
+                    showNotification('Department assigned successfully', 'success');
+                    loadAllComplaints();
+                    closeAssignModal();
+                } else {
+                    showNotification('Failed to assign department', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to assign department', 'error');
+            });
         }
 
         function updateComplaintStatus(id, status) {
@@ -148,22 +378,22 @@
             })
             .then(response => {
                 if (response.ok) {
-                    alert(`Complaint ${status.toLowerCase()} successfully`);
+                    showNotification(`Complaint ${status.toLowerCase()} successfully`, 'success');
                     loadAllComplaints();
                 } else {
-                    alert(`Failed to update complaint status to ${status}`);
+                    showNotification(`Failed to update complaint status`, 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Failed to update complaint status');
+                showNotification('Failed to update complaint status', 'error');
             });
         }
 
         function createDepartment() {
             const departmentName = document.getElementById('departmentName').value.trim();
             if (!departmentName) {
-                alert('Please enter a department name');
+                showNotification('Please enter a department name', 'error');
                 return;
             }
 
@@ -176,21 +406,52 @@
             })
             .then(response => {
                 if (response.ok) {
-                    alert('Department created successfully');
+                    showNotification('Department created successfully', 'success');
                     document.getElementById('departmentName').value = '';
                     loadDepartments();
                 } else {
-                    alert('Failed to create department');
+                    showNotification('Failed to create department', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Failed to create department');
+                showNotification('Failed to create department', 'error');
             });
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('assignModal');
+            if (event.target === modal) {
+                closeAssignModal();
+            }
         }
 
         loadDepartments();
         loadAllComplaints();
+        loadTopLocations();
     </script>
 </body>
 </html>

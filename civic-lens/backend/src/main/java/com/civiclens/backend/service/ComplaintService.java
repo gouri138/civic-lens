@@ -69,4 +69,8 @@ public class ComplaintService {
         }
         return null;
     }
+
+    public List<Object[]> getTopLocations() {
+        return complaintRepository.findTopLocations();
+    }
 }

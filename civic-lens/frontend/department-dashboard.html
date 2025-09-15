@@ -1,3 +1,8 @@
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,41 +10,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Department Dashboard - Civic Lens</title>
     <link rel="stylesheet" href="styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <header>
-        <h1 id="departmentTitle">Department Dashboard - Civic Lens</h1>
-        <nav>
-            <a href="admin-dashboard.html">Back to Admin</a>
-        </nav>
-    </header>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-eye"></i>
+                    <h1 id="departmentTitle">Department Dashboard - Civic Lens</h1>
+                </div>
+                <nav class="nav">
+                    <button class="nav-btn" onclick="window.location.href='admin-dashboard.html'">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Admin
+                    </button>
+                </nav>
+            </div>
+        </header>
 
-    <section>
-        <h2>Assigned Complaints</h2>
-        <table id="departmentComplaintsTable" border="1">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>User</th>
-                    <th>Category</th>
-                    <th>Location</th>
-                    <th>Description</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Complaints will be populated here -->
-            </tbody>
-        </table>
-    </section>
+        <main class="main">
+            <div id="departmentContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </main>
+    </div>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const departmentId = urlParams.get('id');
 
         if (!departmentId || departmentId === 'null') {
-            // Show department selection instead of redirecting
             showDepartmentSelection();
         } else {
             loadDepartmentDashboard(departmentId);
@@ -47,80 +49,224 @@
 
         function showDepartmentSelection() {
             document.getElementById('departmentTitle').textContent = 'Select Department - Civic Lens';
-            document.querySelector('section').innerHTML = `
-                <h2>Select a Department</h2>
-                <div id="departmentSelection">
-                    <p>Loading departments...</p>
+            document.getElementById('departmentContent').innerHTML = `
+                <div class="department-selection">
+                    <div class="selection-header">
+                        <h2><i class="fas fa-building"></i> Select a Department</h2>
+                        <p>Choose a department to view its dashboard</p>
+                    </div>
+                    <div id="departmentGrid" class="departments-grid">
+                        <div class="loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Loading departments...</span>
+                        </div>
+                    </div>
                 </div>
             `;
 
             fetch('http://localhost:8080/api/departments')
                 .then(response => response.json())
                 .then(data => {
-                    const selectionDiv = document.getElementById('departmentSelection');
+                    const grid = document.getElementById('departmentGrid');
+                    
                     if (data.length === 0) {
-                        selectionDiv.innerHTML = '<p>No departments found. Please create departments first.</p>';
+                        grid.innerHTML = `
+                            <div class="no-data">
+                                <i class="fas fa-building"></i>
+                                <h3>No departments found</h3>
+                                <p>Please create departments first in the admin dashboard</p>
+                                <button onclick="window.location.href='admin-dashboard.html'" class="create-btn">
+                                    <i class="fas fa-plus"></i>
+                                    Go to Admin Dashboard
+                                </button>
+                            </div>
+                        `;
                         return;
                     }
-                    selectionDiv.innerHTML = '<p>Select a department to view its dashboard:</p>';
+
+                    grid.innerHTML = '';
                     data.forEach(department => {
-                        const btn = document.createElement('button');
-                        btn.textContent = department.name;
-                        btn.onclick = () => {
-                            window.location.href = `department-dashboard.html?id=${department.id}`;
-                        };
-                        selectionDiv.appendChild(btn);
+                        const card = document.createElement('div');
+                        card.className = 'department-selection-card';
+                        card.innerHTML = `
+                            <div class="department-icon">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <h3>${department.name}</h3>
+                            <button onclick="window.location.href='department-dashboard.html?id=${department.id}'" class="select-btn">
+                                <span>View Dashboard</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        `;
+                        grid.appendChild(card);
                     });
                 })
                 .catch(error => {
                     console.error('Error loading departments:', error);
-                    document.getElementById('departmentSelection').innerHTML = '<p>Error loading departments. Please check if the backend is running.</p>';
+                    document.getElementById('departmentGrid').innerHTML = `
+                        <div class="error-state">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h3>Error loading departments</h3>
+                            <p>Please check if the backend is running</p>
+                            <button onclick="showDepartmentSelection()" class="retry-btn">
+                                <i class="fas fa-redo"></i>
+                                Retry
+                            </button>
+                        </div>
+                    `;
                 });
         }
 
         function loadDepartmentDashboard(deptId) {
-            function loadDepartmentComplaints() {
-                fetch(`http://localhost:8080/api/complaints/department/${deptId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        const tbody = document.getElementById('departmentComplaintsTable').querySelector('tbody');
-                        tbody.innerHTML = '';
-                        data.forEach(complaint => {
-                            const tr = document.createElement('tr');
-                            tr.innerHTML = `
-                                <td>${complaint.id}</td>
-                                <td>${complaint.user ? complaint.user.name : 'N/A'}</td>
-                                <td>${complaint.category}</td>
-                                <td>${complaint.location}</td>
-                                <td>${complaint.description}</td>
-                                <td><span class="status-${complaint.status.toLowerCase().replace(' ', '-')}">${complaint.status}</span></td>
-                                <td>
-                                    <button onclick="resolveComplaint(${complaint.id})">Resolve</button>
-                                    <button onclick="unresolveComplaint(${complaint.id})">Not Resolved</button>
-                                </td>
-                            `;
-                            tbody.appendChild(tr);
-                        });
-                    })
-                    .catch(error => {
-                        console.error('Error loading department complaints:', error);
-                    });
-            }
-
-            // Load department name
+            // Load department name first
             fetch(`http://localhost:8080/api/departments/${deptId}`)
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById('departmentTitle').textContent = `${data.name} Department Dashboard - Civic Lens`;
+                    document.getElementById('departmentTitle').textContent = `${data.name} Department Dashboard`;
+                    setupDepartmentDashboard(data.name);
+                    loadDepartmentComplaints(deptId);
                 })
                 .catch(error => {
                     console.error('Error loading department:', error);
+                    showNotification('Error loading department information', 'error');
                 });
-
-            loadDepartmentComplaints();
         }
 
-        // Global functions for button onclick handlers
+        function setupDepartmentDashboard(departmentName) {
+            document.getElementById('departmentContent').innerHTML = `
+                <div class="department-dashboard">
+                    <div class="dashboard-header">
+                        <h2><i class="fas fa-clipboard-list"></i> ${departmentName} Department</h2>
+                        <div class="dashboard-stats">
+                            <div class="stat-card">
+                                <i class="fas fa-tasks"></i>
+                                <div class="stat-info">
+                                    <span class="stat-number" id="assignedCount">0</span>
+                                    <span class="stat-label">Assigned</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <i class="fas fa-clock"></i>
+                                <div class="stat-info">
+                                    <span class="stat-number" id="pendingCount">0</span>
+                                    <span class="stat-label">Pending</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <i class="fas fa-check-circle"></i>
+                                <div class="stat-info">
+                                    <span class="stat-number" id="resolvedCount">0</span>
+                                    <span class="stat-label">Resolved</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-list"></i> Assigned Complaints</h3>
+                            <div class="filter-controls">
+                                <select id="statusFilter" onchange="filterDepartmentComplaints()">
+                                    <option value="">All Status</option>
+                                    <option value="Accepted">Accepted</option>
+                                    <option value="Resolved">Resolved</option>
+                                    <option value="Not Resolved">Not Resolved</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table id="departmentComplaintsTable" class="modern-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>User</th>
+                                        <th>Category</th>
+                                        <th>Location</th>
+                                        <th>Description</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Complaints will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        let departmentComplaints = [];
+
+        function loadDepartmentComplaints(deptId) {
+            fetch(`http://localhost:8080/api/complaints/department/${deptId}`)
+                .then(response => response.json())
+                .then(data => {
+                    departmentComplaints = data;
+                    updateDepartmentStats(data);
+                    displayDepartmentComplaints(data);
+                })
+                .catch(error => {
+                    console.error('Error loading department complaints:', error);
+                    showNotification('Error loading complaints', 'error');
+                });
+        }
+
+        function displayDepartmentComplaints(complaints) {
+            const tbody = document.getElementById('departmentComplaintsTable').querySelector('tbody');
+            tbody.innerHTML = '';
+
+            if (complaints.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="no-data">No complaints assigned to this department</td></tr>';
+                return;
+            }
+
+            complaints.forEach(complaint => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span class="complaint-id">#${complaint.id}</span></td>
+                    <td>${complaint.user ? complaint.user.name : 'N/A'}</td>
+                    <td><span class="category">${complaint.category}</span></td>
+                    <td><span class="location">${complaint.location}</span></td>
+                    <td><span class="description">${complaint.description}</span></td>
+                    <td><span class="status status-${complaint.status.toLowerCase().replace(' ', '-')}">${complaint.status}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button onclick="resolveComplaint(${complaint.id})" class="action-btn resolve" title="Mark as Resolved">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button onclick="unresolveComplaint(${complaint.id})" class="action-btn unresolve" title="Mark as Not Resolved">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateDepartmentStats(complaints) {
+            const assigned = complaints.length;
+            const pending = complaints.filter(c => c.status === 'Accepted' || c.status === 'Pending').length;
+            const resolved = complaints.filter(c => c.status === 'Resolved').length;
+
+            document.getElementById('assignedCount').textContent = assigned;
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('resolvedCount').textContent = resolved;
+        }
+
+        function filterDepartmentComplaints() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            let filtered = departmentComplaints;
+
+            if (statusFilter) {
+                filtered = departmentComplaints.filter(c => c.status === statusFilter);
+            }
+
+            displayDepartmentComplaints(filtered);
+        }
+
         function resolveComplaint(id) {
             updateComplaintStatus(id, 'Resolved');
         }
@@ -139,20 +285,42 @@
             })
             .then(response => {
                 if (response.ok) {
-                    alert(`Complaint ${status.toLowerCase()}`);
+                    showNotification(`Complaint marked as ${status.toLowerCase()}`, 'success');
                     // Reload the current department's complaints
                     const currentDeptId = urlParams.get('id');
                     if (currentDeptId) {
-                        loadDepartmentDashboard(currentDeptId);
+                        loadDepartmentComplaints(currentDeptId);
                     }
                 } else {
-                    alert(`Failed to update complaint status`);
+                    showNotification('Failed to update complaint status', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Failed to update complaint status');
+                showNotification('Failed to update complaint status', 'error');
             });
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
         }
     </script>
 </body>

@@ -58,4 +58,10 @@ public class ComplaintController {
         }
         return ResponseEntity.notFound().build();
     }
+
+    @GetMapping("/top-locations")
+    public ResponseEntity<List<Object[]>> getTopLocations() {
+        List<Object[]> topLocations = complaintService.getTopLocations();
+        return ResponseEntity.ok(topLocations);
+    }
 }
