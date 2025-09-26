@@ -5,9 +5,12 @@ import com.civiclens.backend.dto.UpdateStatusRequest;
 import com.civiclens.backend.entity.Complaint;
 import com.civiclens.backend.service.ComplaintService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -17,9 +20,27 @@ public class ComplaintController {
     @Autowired
     private ComplaintService complaintService;
 
-    @PostMapping
-    public ResponseEntity<Complaint> submitComplaint(@RequestBody ComplaintDTO complaintDTO) {
-        Complaint complaint = complaintService.submitComplaint(complaintDTO);
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Complaint> submitComplaint(
+            @RequestParam("userId") Long userId,
+            @RequestParam("category") String category,
+            @RequestParam("location") String location,
+            @RequestParam("description") String description,
+            @RequestParam("status") String status,
+            @RequestParam(value = "latitude", required = false) Double latitude,
+            @RequestParam(value = "longitude", required = false) Double longitude,
+            @RequestParam(value = "region", required = false) String region,
+            @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
+        ComplaintDTO complaintDTO = new ComplaintDTO();
+        complaintDTO.setUserId(userId);
+        complaintDTO.setCategory(category);
+        complaintDTO.setLocation(location);
+        complaintDTO.setDescription(description);
+        complaintDTO.setStatus(status);
+        complaintDTO.setLatitude(latitude);
+        complaintDTO.setLongitude(longitude);
+        complaintDTO.setRegion(region);
+        Complaint complaint = complaintService.submitComplaint(complaintDTO, image);
         return ResponseEntity.ok(complaint);
     }
 
@@ -53,6 +74,15 @@ public class ComplaintController {
     @PutMapping("/{id}/assign/{departmentId}")
     public ResponseEntity<Complaint> assignDepartment(@PathVariable Long id, @PathVariable Long departmentId) {
         Complaint complaint = complaintService.updateComplaintStatus(id, null, departmentId);
+        if (complaint != null) {
+            return ResponseEntity.ok(complaint);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/{id}/proof")
+    public ResponseEntity<Complaint> uploadProofImage(@PathVariable Long id, @RequestParam("proofImage") MultipartFile proofImage) throws IOException {
+        Complaint complaint = complaintService.uploadProofImage(id, proofImage);
         if (complaint != null) {
             return ResponseEntity.ok(complaint);
         }

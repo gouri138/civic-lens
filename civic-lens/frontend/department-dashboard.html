@@ -183,6 +183,7 @@
                                         <th>Category</th>
                                         <th>Location</th>
                                         <th>Description</th>
+                                        <th>Image</th>
                                         <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
@@ -218,7 +219,7 @@
             tbody.innerHTML = '';
 
             if (complaints.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="no-data">No complaints assigned to this department</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="no-data">No complaints assigned to this department</td></tr>';
                 return;
             }
 
@@ -230,6 +231,7 @@
                     <td><span class="category">${complaint.category}</span></td>
                     <td><span class="location">${complaint.location}</span></td>
                     <td><span class="description">${complaint.description}</span></td>
+                    <td>${complaint.imageUrl ? `<img src="http://localhost:8080${complaint.imageUrl}" alt="Complaint Image" style="max-width: 100px; max-height: 100px;">` : 'No Image'}</td>
                     <td><span class="status status-${complaint.status.toLowerCase().replace(' ', '-')}">${complaint.status}</span></td>
                     <td>
                         <div class="action-buttons">
@@ -238,6 +240,10 @@
                             </button>
                             <button onclick="unresolveComplaint(${complaint.id})" class="action-btn unresolve" title="Mark as Not Resolved">
                                 <i class="fas fa-times"></i>
+                            </button>
+                            <input type="file" id="proof-${complaint.id}" accept="image/*" style="display: none;" onchange="uploadProof(${complaint.id})">
+                            <button onclick="document.getElementById('proof-${complaint.id}').click()" class="action-btn upload" title="Upload Proof Image">
+                                <i class="fas fa-upload"></i>
                             </button>
                         </div>
                     </td>
@@ -301,6 +307,36 @@
             });
         }
 
+        function uploadProof(id) {
+            const fileInput = document.getElementById(`proof-${id}`);
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('proofImage', file);
+
+            fetch(`http://localhost:8080/api/complaints/${id}/proof`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    showNotification('Proof image uploaded successfully', 'success');
+                    // Reload the current department's complaints
+                    const currentDeptId = urlParams.get('id');
+                    if (currentDeptId) {
+                        loadDepartmentComplaints(currentDeptId);
+                    }
+                } else {
+                    showNotification('Failed to upload proof image', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to upload proof image', 'error');
+            });
+        }
+
         function showNotification(message, type) {
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
@@ -308,13 +344,13 @@
                 <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
                 <span>${message}</span>
             `;
-            
+
             document.body.appendChild(notification);
-            
+
             setTimeout(() => {
                 notification.classList.add('show');
             }, 100);
-            
+
             setTimeout(() => {
                 notification.classList.remove('show');
                 setTimeout(() => {

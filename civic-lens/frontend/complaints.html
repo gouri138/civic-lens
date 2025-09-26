@@ -56,20 +56,12 @@
                                 <i class="fas fa-map-marker-alt"></i>
                                 Location
                             </label>
-                            <select id="location" name="location" required>
-                                <option value="">Select a location</option>
-                                <option value="Patiala">Patiala</option>
-                                <option value="Rajpura">Rajpura</option>
-                                <option value="Nabha">Nabha</option>
-                                <option value="Samana">Samana</option>
-                                <option value="Ghanaur">Ghanaur</option>
-                                <option value="Patran">Patran</option>
-                                <option value="Banur">Banur</option>
-                                <option value="Sanaur">Sanaur</option>
-                                <option value="Shutrana">Shutrana</option>
-                                <option value="Jhansla">Jhansla</option>
-                                <option value="Rurki Kasba">Rurki Kasba</option>
-                            </select>
+                            <div class="location-input-group">
+                                <input type="text" id="location" name="location" placeholder="Enter location or use geolocation" required>
+                                <button type="button" id="geolocateBtn" class="geolocate-btn" title="Get Current Location">
+                                    <i class="fas fa-crosshairs"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -79,6 +71,14 @@
                             Description
                         </label>
                         <textarea id="description" name="description" placeholder="Describe the issue in detail..." required rows="4"></textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="image">
+                            <i class="fas fa-camera"></i>
+                            Image (Optional)
+                        </label>
+                        <input type="file" id="image" name="image" accept="image/*">
                     </div>
 
                     <button type="submit" class="submit-btn">
@@ -108,6 +108,7 @@
                                 <th>Description</th>
                                 <th>Status</th>
                                 <th>Department</th>
+                                <th>Proof Image</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -121,12 +122,46 @@
 
     <script>
         const userId = localStorage.getItem('userId'); // Assume userId stored after login
+        let currentLat = null;
+        let currentLng = null;
+
+        // Geolocation functionality
+        document.getElementById('geolocateBtn').addEventListener('click', function() {
+            if (navigator.geolocation) {
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                this.disabled = true;
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        currentLat = position.coords.latitude;
+                        currentLng = position.coords.longitude;
+                        document.getElementById('location').value = `Current Location (Lat: ${currentLat.toFixed(6)}, Lng: ${currentLng.toFixed(6)})`;
+                        showNotification('Location captured successfully!', 'success');
+                        document.getElementById('geolocateBtn').innerHTML = '<i class="fas fa-crosshairs"></i>';
+                        document.getElementById('geolocateBtn').disabled = false;
+                    },
+                    function(error) {
+                        showNotification('Failed to get location. Please enter manually.', 'error');
+                        document.getElementById('geolocateBtn').innerHTML = '<i class="fas fa-crosshairs"></i>';
+                        document.getElementById('geolocateBtn').disabled = false;
+                        console.error('Geolocation error:', error);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 60000
+                    }
+                );
+            } else {
+                showNotification('Geolocation is not supported by this browser.', 'error');
+            }
+        });
 
         document.getElementById('complaintForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const category = document.getElementById('category').value;
             const location = document.getElementById('location').value;
             const description = document.getElementById('description').value;
+            const imageFile = document.getElementById('image').files[0];
 
             // Show loading state
             const submitBtn = this.querySelector('.submit-btn');
@@ -134,24 +169,32 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
             submitBtn.disabled = true;
 
+            const formData = new FormData();
+            formData.append('userId', userId);
+            formData.append('category', category);
+            formData.append('location', location);
+            formData.append('description', description);
+            formData.append('status', 'Pending');
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+            if (currentLat && currentLng) {
+                formData.append('latitude', currentLat);
+                formData.append('longitude', currentLng);
+                formData.append('region', location); // Use location as region for now
+            }
+
             fetch('http://localhost:8080/api/complaints', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    userId: userId,
-                    category: category,
-                    location: location,
-                    description: description,
-                    status: 'Pending'
-                })
+                body: formData
             })
             .then(response => {
                 if (response.ok) {
                     showNotification('Complaint submitted successfully!', 'success');
                     loadComplaints();
                     document.getElementById('complaintForm').reset();
+                    currentLat = null;
+                    currentLng = null;
                 } else {
                     showNotification('Failed to submit complaint', 'error');
                 }
@@ -174,7 +217,7 @@
                     tbody.innerHTML = '';
                     
                     if (data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="6" class="no-data">No complaints found</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="7" class="no-data">No complaints found</td></tr>';
                         updateStats(0, 0, 0);
                         return;
                     }
@@ -190,6 +233,7 @@
                             <td><span class="description">${complaint.description}</span></td>
                             <td><span class="status status-${complaint.status.toLowerCase().replace(' ', '-')}">${complaint.status}</span></td>
                             <td><span class="department">${complaint.department ? complaint.department.name : 'Unassigned'}</span></td>
+                            <td>${complaint.proofImageUrl ? `<img src="http://localhost:8080${complaint.proofImageUrl}" alt="Proof Image" style="max-width: 100px; max-height: 100px;">` : 'No Proof'}</td>
                         `;
                         tbody.appendChild(tr);
 

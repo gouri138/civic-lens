@@ -30,6 +30,16 @@ public class Complaint {
     @JoinColumn(name = "department_id")
     private Department department;
 
+    private Double latitude;
+
+    private Double longitude;
+
+    private String region;
+
+    private String imageUrl;
+
+    private String proofImageUrl;
+
     // Getters and Setters
 
     public Long getId() {
@@ -86,5 +96,45 @@ public class Complaint {
 
     public void setDepartment(Department department) {
         this.department = department;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public String getProofImageUrl() {
+        return proofImageUrl;
+    }
+
+    public void setProofImageUrl(String proofImageUrl) {
+        this.proofImageUrl = proofImageUrl;
     }
 }
