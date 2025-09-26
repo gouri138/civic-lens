@@ -1,2 +1,0 @@
-# JMeter generated Authorization file
-localhost	admin@civiclens.com	admin123		Realm	BASIC

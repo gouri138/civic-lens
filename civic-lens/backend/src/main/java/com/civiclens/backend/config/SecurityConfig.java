@@ -22,8 +22,8 @@ public class SecurityConfig {
             .authorizeHttpRequests()
                 .requestMatchers("/api/users/register", "/api/users/login", "/api/admins/register", "/api/admins/login", "/api/complaints/**", "/api/departments/**", "/uploads/**").permitAll()
                 .anyRequest().authenticated()
-            .and()
-            .cors();
+            .and();
+
         return http.build();
     }
 

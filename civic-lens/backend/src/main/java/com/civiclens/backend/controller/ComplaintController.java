@@ -94,4 +94,10 @@ public class ComplaintController {
         List<Object[]> topLocations = complaintService.getTopLocations();
         return ResponseEntity.ok(topLocations);
     }
+
+    @GetMapping("/top-districts")
+    public ResponseEntity<List<Object[]>> getTopDistricts() {
+        List<Object[]> topDistricts = complaintService.getTopDistricts();
+        return ResponseEntity.ok(topDistricts);
+    }
 }

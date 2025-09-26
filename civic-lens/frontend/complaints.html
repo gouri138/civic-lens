@@ -105,6 +105,7 @@
                                 <th>ID</th>
                                 <th>Category</th>
                                 <th>Location</th>
+                                <th>District</th>
                                 <th>Description</th>
                                 <th>Status</th>
                                 <th>Department</th>
@@ -217,7 +218,7 @@
                     tbody.innerHTML = '';
                     
                     if (data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="7" class="no-data">No complaints found</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="8" class="no-data">No complaints found</td></tr>';
                         updateStats(0, 0, 0);
                         return;
                     }
@@ -230,6 +231,7 @@
                             <td><span class="complaint-id">#${complaint.id}</span></td>
                             <td><span class="category">${complaint.category}</span></td>
                             <td><span class="location">${complaint.location}</span></td>
+                            <td><span class="district">${complaint.district || 'Unknown'}</span></td>
                             <td><span class="description">${complaint.description}</span></td>
                             <td><span class="status status-${complaint.status.toLowerCase().replace(' ', '-')}">${complaint.status}</span></td>
                             <td><span class="department">${complaint.department ? complaint.department.name : 'Unassigned'}</span></td>

@@ -10,6 +10,10 @@ import com.civiclens.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,6 +44,12 @@ public class ComplaintService {
         complaint.setLatitude(complaintDTO.getLatitude());
         complaint.setLongitude(complaintDTO.getLongitude());
         complaint.setRegion(complaintDTO.getRegion());
+
+        // Auto-detect district from coordinates
+        if (complaintDTO.getLatitude() != null && complaintDTO.getLongitude() != null) {
+            String district = getDistrictFromCoordinates(complaintDTO.getLatitude(), complaintDTO.getLongitude());
+            complaint.setDistrict(district);
+        }
 
         Optional<User> user = userRepository.findById(complaintDTO.getUserId());
         if (user.isPresent()) {
@@ -111,5 +121,36 @@ public class ComplaintService {
 
     public List<Object[]> getTopLocations() {
         return complaintRepository.findTopLocations();
+    }
+
+    public List<Object[]> getTopDistricts() {
+        return complaintRepository.findTopDistricts();
+    }
+
+    private String getDistrictFromCoordinates(Double latitude, Double longitude) {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            String url = String.format("https://nominatim.openstreetmap.org/reverse?format=json&lat=%f&lon=%f&zoom=10&addressdetails=1", latitude, longitude);
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode root = mapper.readTree(response.getBody());
+                JsonNode address = root.path("address");
+
+                // Try to get district, county, or state_district
+                String district = address.path("county").asText();
+                if (district.isEmpty()) {
+                    district = address.path("state_district").asText();
+                }
+                if (district.isEmpty()) {
+                    district = address.path("city").asText();
+                }
+                return district.isEmpty() ? "Unknown District" : district;
+            }
+        } catch (Exception e) {
+            System.err.println("Error fetching district: " + e.getMessage());
+        }
+        return "Unknown District";
     }
 }

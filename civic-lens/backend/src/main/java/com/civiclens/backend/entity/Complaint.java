@@ -36,6 +36,8 @@ public class Complaint {
 
     private String region;
 
+    private String district;
+
     private String imageUrl;
 
     private String proofImageUrl;
@@ -136,5 +138,13 @@ public class Complaint {
 
     public void setProofImageUrl(String proofImageUrl) {
         this.proofImageUrl = proofImageUrl;
+    }
+
+    public String getDistrict() {
+        return district;
+    }
+
+    public void setDistrict(String district) {
+        this.district = district;
     }
 }

@@ -84,6 +84,8 @@ public class ComplaintDTO {
 
     private String region;
 
+    private String district;
+
     private String imageUrl;
 
     private String proofImageUrl;
@@ -126,5 +128,13 @@ public class ComplaintDTO {
 
     public void setProofImageUrl(String proofImageUrl) {
         this.proofImageUrl = proofImageUrl;
+    }
+
+    public String getDistrict() {
+        return district;
+    }
+
+    public void setDistrict(String district) {
+        this.district = district;
     }
 }

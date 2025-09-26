@@ -1,0 +1,4 @@
+com\civiclens\backend\AdminControllerTest.class
+com\civiclens\backend\UserServiceTest.class
+com\civiclens\backend\AdminServiceTest.class
+com\civiclens\backend\UserControllerTest.class

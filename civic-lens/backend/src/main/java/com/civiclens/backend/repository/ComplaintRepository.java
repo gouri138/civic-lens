@@ -20,4 +20,7 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 
     @Query("SELECT c.location, COUNT(c) as cnt FROM Complaint c GROUP BY c.location ORDER BY cnt DESC")
     List<Object[]> findTopLocations();
+
+    @Query("SELECT c.district, COUNT(c) as cnt FROM Complaint c WHERE c.district IS NOT NULL AND c.district <> 'Unknown District' GROUP BY c.district ORDER BY cnt DESC")
+    List<Object[]> findTopDistricts();
 }
