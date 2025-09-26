@@ -19,10 +19,8 @@ public class SecurityConfig {
         http
             .csrf().disable()
             .authorizeHttpRequests()
-                .requestMatchers("/api/users/register", "/api/users/login", "/api/admins/register", "/api/complaints/**", "/api/departments/**").permitAll()
+                .requestMatchers("/api/users/register", "/api/users/login", "/api/admins/register", "/api/admins/login", "/api/complaints/**", "/api/departments/**").permitAll()
                 .anyRequest().authenticated()
-            .and()
-            .httpBasic()
             .and()
             .cors();
         return http.build();

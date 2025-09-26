@@ -16,7 +16,7 @@ public class Admin {
     private String name;
 
     @Email
-    @Column(unique = true)
+    @Column(name ="gmail", unique = true)
     private String email;
 
     @NotBlank

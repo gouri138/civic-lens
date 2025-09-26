@@ -39,4 +39,13 @@ public class AdminService {
     public Optional<Admin> getAdminById(Long id) {
         return adminRepository.findById(id);
     }
+
+    public boolean authenticateAdmin(String email, String password) {
+        Optional<Admin> adminOpt = adminRepository.findByEmail(email);
+        if (adminOpt.isPresent()) {
+            Admin admin = adminOpt.get();
+            return passwordEncoder.matches(password, admin.getPassword());
+        }
+        return false;
+    }
 }

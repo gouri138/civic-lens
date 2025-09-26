@@ -106,7 +106,13 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
         },
         body: JSON.stringify({ email, password })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error('Invalid credentials');
+        }
+    })
     .then(data => {
         if (data.id) {
             localStorage.setItem('userId', data.id);
@@ -123,7 +129,62 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Login failed. Please check your connection.', 'error');
+        if (error.message === 'Invalid credentials') {
+            showNotification('Invalid email or password', 'error');
+        } else {
+            showNotification('Login failed. Please check your connection.', 'error');
+        }
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalContent;
+        submitBtn.disabled = false;
+    });
+});
+
+document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const email = document.getElementById('adminLoginEmail').value;
+    const password = document.getElementById('adminLoginPassword').value;
+
+    // Show loading state
+    const submitBtn = this.querySelector('.submit-btn');
+    const originalContent = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Admin Signing In...';
+    submitBtn.disabled = true;
+
+    fetch('http://localhost:8080/api/admins/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error('Invalid credentials');
+        }
+    })
+    .then(data => {
+        if (data.id) {
+            localStorage.setItem('adminId', data.id);
+            showNotification('Admin login successful! Redirecting...', 'success');
+            
+            setTimeout(() => {
+                window.location.href = 'admin-dashboard.html';
+            }, 1500);
+        } else {
+            showNotification('Invalid admin email or password', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (error.message === 'Invalid credentials') {
+            showNotification('Invalid admin email or password', 'error');
+        } else {
+            showNotification('Admin login failed. Please check your connection.', 'error');
+        }
     })
     .finally(() => {
         submitBtn.innerHTML = originalContent;

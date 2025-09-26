@@ -1,19 +1,39 @@
-# TODO: Fix Login 401 Error
+# Civic Lens Testing Implementation
 
-## Tasks
-- [x] Update SecurityConfig to allow unauthenticated access to /api/users/login
-- [x] Add authenticateUser method to UserService
-- [x] Add login endpoint to UserController
-- [x] Test the login functionality
+## JUnit Tests
+- [x] Create test directory: src/test/java/com/civiclens/backend/
+- [x] Create AdminServiceTest.java
+  - [x] Test registerAdmin method
+  - [x] Test authenticateAdmin method
+  - [x] Test findByEmail method
+  - [x] Test getAllAdmins method
+  - [x] Test getAdminById method
+- [x] Create UserServiceTest.java
+  - [x] Test registerUser method
+  - [x] Test authenticateUser method
+  - [x] Test findByEmail method
+  - [x] Test getAllUsers method
+  - [x] Test getUserById method
+- [x] Create AdminControllerTest.java
+  - [x] Test register endpoint
+  - [x] Test login endpoint (hardcoded)
+  - [x] Test getAllAdmins endpoint
+  - [x] Test getAdminById endpoint
+- [x] Create UserControllerTest.java
+  - [x] Test register endpoint
+  - [x] Test login endpoint
+  - [x] Test getAllUsers endpoint
+  - [x] Test getUserById endpoint
 
-# TODO: Create Department Dashboards
+## JMeter Tests
+- [x] Create JMeter test directory: civic-lens/tests/jmeter/
+- [x] Create api-test.jmx
+  - [x] User registration test plan
+  - [x] User login test plan
+  - [x] Admin login test plan
+  - [x] Complaint CRUD test plans
 
-## Tasks
-- [x] Create department-dashboard.html for managing department-specific complaints
-- [x] Update admin dashboard to show department buttons
-- [x] Add backend endpoints for department complaint management
-- [x] Update SecurityConfig to allow department endpoints
-- [x] Add department creation functionality to admin dashboard
-- [x] Fix department dashboard to handle missing department ID gracefully
-- [x] Fix JavaScript error with resolve/unresolve functions
-- [x] Ensure status updates are visible to both admin and departments
+## Verification
+- [x] Run `mvn test` to execute JUnit tests
+- [x] Install JMeter and run JMX file
+- [x] Verify test results and functionality

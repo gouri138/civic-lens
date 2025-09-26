@@ -28,6 +28,10 @@
                         <i class="fas fa-user-plus"></i>
                         Register
                     </button>
+                    <button class="nav-btn" onclick="showAdminLogin()">
+                        <i class="fas fa-user-shield"></i>
+                        Admin Login
+                    </button>
                 </nav>
             </div>
         </header>
@@ -108,6 +112,31 @@
                         <p>Already have an account? <button onclick="showLogin()" class="link-btn">Sign in</button></p>
                     </div>
                 </div>
+
+                <div class="auth-card" id="adminLoginCard" style="display: none;">
+                    <div class="auth-header">
+                        <i class="fas fa-user-shield"></i>
+                        <h3>Admin Login</h3>
+                        <p>Access the admin dashboard</p>
+                    </div>
+                    <form id="adminLoginForm" class="auth-form">
+                        <div class="input-group">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="adminLoginEmail" placeholder="Admin email address" required>
+                        </div>
+                        <div class="input-group">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="adminLoginPassword" placeholder="Password" required>
+                        </div>
+                        <button type="submit" class="submit-btn">
+                            <span>Admin Sign In</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </form>
+                    <div class="auth-footer">
+                        <p>Back to <button onclick="showLogin()" class="link-btn">User Login</button></p>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -124,7 +153,18 @@
         function showRegister() {
             document.getElementById('loginCard').style.display = 'none';
             document.getElementById('registerCard').style.display = 'block';
+            document.getElementById('adminLoginCard').style.display = 'none';
             document.querySelector('.nav-btn:first-child').classList.remove('active');
+            document.querySelector('.nav-btn:nth-child(2)').classList.add('active');
+            document.querySelector('.nav-btn:last-child').classList.remove('active');
+        }
+
+        function showAdminLogin() {
+            document.getElementById('loginCard').style.display = 'none';
+            document.getElementById('registerCard').style.display = 'none';
+            document.getElementById('adminLoginCard').style.display = 'block';
+            document.querySelector('.nav-btn:first-child').classList.remove('active');
+            document.querySelector('.nav-btn:nth-child(2)').classList.remove('active');
             document.querySelector('.nav-btn:last-child').classList.add('active');
         }
 

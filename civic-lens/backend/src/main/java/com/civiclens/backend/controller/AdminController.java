@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -21,6 +22,22 @@ public class AdminController {
     public ResponseEntity<Admin> register(@RequestBody UserDTO userDTO) {
         Admin admin = adminService.registerAdmin(userDTO);
         return ResponseEntity.ok(admin);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody UserDTO userDTO) {
+        // Fixed admin credentials
+        if ("admin@civiclens.com".equals(userDTO.getEmail()) && "admin123".equals(userDTO.getPassword())) {
+            // Create a dummy admin object for response
+            Admin admin = new Admin();
+            admin.setId(1L);
+            admin.setName("Admin");
+            admin.setEmail("admin@civiclens.com");
+            admin.setRole("ADMIN");
+            return ResponseEntity.ok(admin);
+        } else {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
+        }
     }
 
     @GetMapping
